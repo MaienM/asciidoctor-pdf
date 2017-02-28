@@ -264,7 +264,7 @@ footer:
     #  content: '{page-number}'
   verso:
     #columns: $footer_recto_columns
-    left:
+    right:
       content: $footer_recto_right_content
       #content: '{page-number} | {chapter-title}'
     #center:
