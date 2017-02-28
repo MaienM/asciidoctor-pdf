@@ -186,15 +186,6 @@ class Converter < ::Prawn::Document
     # NOTE a new page will already be started if the cover image is a PDF
     start_new_page unless page_is_empty?
 
-    num_toc_levels = (doc.attr 'toclevels', 2).to_i
-    if (insert_toc = (doc.attr? 'toc') && doc.sections?)
-      start_new_page if @ppbook && verso_page?
-      toc_page_nums = page_number
-      dry_run { toc_page_nums = layout_toc doc, num_toc_levels, toc_page_nums }
-      # NOTE reserve pages for the toc; leaves cursor on page after last page in toc
-      toc_page_nums.each { start_new_page }
-    end
-
     # FIXME only apply to book doctype once title and toc are moved to start page when using article doctype
     #start_new_page if @ppbook && verso_page?
     start_new_page if @media == 'prepress' && verso_page?
@@ -209,7 +200,20 @@ class Converter < ::Prawn::Document
     # QUESTION should we delete page if document is empty? (leaving no pages?)
     delete_page if page_is_empty? && page_count > 1
 
-    toc_page_nums = insert_toc ? (layout_toc doc, num_toc_levels, toc_page_nums.first, num_front_matter_pages) : []
+    toc_page_nums = []
+    num_toc_levels = (doc.attr 'toclevels', 2).to_i
+    if (include_toc = doc.attr? 'toc')
+      start_new_page if @ppbook && verso_page?
+      toc_page_nums = page_number
+      dry_run { toc_page_nums = layout_toc doc, num_toc_levels, toc_page_nums }
+      # NOTE reserve pages for the toc; leaves cursor on page after last page in toc
+      toc_start = (doc.attr 'toc-start', 2).to_i
+      num_front_matter_pages = toc_start - 1
+      go_to_page toc_start - 1
+      toc_page_nums.each { start_new_page }
+      toc_offset = toc_page_nums.begin - toc_page_nums.end + toc_start - 2
+      toc_page_nums = layout_toc doc, num_toc_levels, toc_start, toc_offset
+    end
 
     if page_count > num_front_matter_pages
       unless doc.noheader || @theme.header_height.to_f.zero?
