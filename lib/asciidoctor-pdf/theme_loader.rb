@@ -71,7 +71,12 @@ class ThemeLoader
     if theme_file == BaseThemePath
       theme_data
     else
-      load_file theme_file, theme_data
+      theme_data = load_file DefaultThemePath, theme_data
+      if theme_file == DefaultThemePath
+        theme_data
+      else
+        load_file theme_file, theme_data
+      end
     end
   end
 
